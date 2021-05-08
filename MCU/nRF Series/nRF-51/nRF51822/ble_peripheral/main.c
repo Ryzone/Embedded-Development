@@ -1,23 +1,23 @@
 #include <stdint.h>
 #include <string.h>
 #include "nordic_common.h"
-#include "nrf.h"																																		
+#include "nrf.h"									
 #include "ble_hci.h"
 #include "ble_advdata.h"
 #include "ble_advertising.h"
 #include "softdevice_handler.h"
-#include "app_timer.h"																															//
-#include "ble_nus.h"																																//
+#include "app_timer.h"									//
+#include "ble_nus.h"									//
 #include "app_util_platform.h"
 #include "bsp.h"
 #include "bsp_btn_ble.h"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"																																
 #include "boards.h"
-#include "twi_master.h"																															//
-#include "mpu6050.h"																																//MPU6050Çı¶¯ 
-#include "inv_mpu.h"																																//MPU6050Ó²¼şDMP 
-#include "inv_mpu_dmp_motion_driver.h"																							//MPU6050Ó²¼şDMPÇı¶¯ 
+#include "twi_master.h"									//
+#include "mpu6050.h"									//MPU6050é©±åŠ¨ 
+#include "inv_mpu.h"									//MPU6050ç¡¬ä»¶DMP 
+#include "inv_mpu_dmp_motion_driver.h"							//MPU6050ç¡¬ä»¶DMPé©±åŠ¨ 
 
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include the service_changed characteristic. If not enabled, the server's database cannot be changed for the lifetime of the device. */
@@ -31,37 +31,37 @@
 #define CENTRAL_LINK_COUNT              0                                           /**< Number of central links used by the application. When changing this number remember to adjust the RAM settings*/
 #define PERIPHERAL_LINK_COUNT           1                                           /**< Number of peripheral links used by the application. When changing this number remember to adjust the RAM settings*/
 
-#define DEVICE_NAME                     "Nordic_UART"                               //Ô¤ÉèÀ¶ÑÀÃû³Æ 
+#define DEVICE_NAME                     "Nordic_UART"                               //é¢„è®¾è“ç‰™åç§° 
 
-#define APP_ADV_INTERVAL                32                                          //¹ã²¥¼ä¸ô£¬ÒÔ0.625msÎªµ¥Î» 
-#define APP_ADV_TIMEOUT_IN_SECONDS      0 																					//¹ã²¥³¬Ê±£¬0ÎªÎŞ³¬Ê± 
+#define APP_ADV_INTERVAL                32                                          //å¹¿æ’­é—´éš”ï¼Œä»¥0.625msä¸ºå•ä½ 
+#define APP_ADV_TIMEOUT_IN_SECONDS      0                                           //å¹¿æ’­è¶…æ—¶ï¼Œ0ä¸ºæ— è¶…æ—¶ 
 
 #define APP_TIMER_PRESCALER             0                                           /**< Value of the RTC1 PRESCALER register. */
-#define APP_TIMER_OP_QUEUE_SIZE         5                                           //ÅÌÑÀ¶¨Ê±Æ÷¶ÓÁĞ 
+#define APP_TIMER_OP_QUEUE_SIZE         5                                           //ç›˜ç‰™å®šæ—¶å™¨é˜Ÿåˆ— 
 
 #define SLAVE_LATENCY                   0                                           //
 
 #define DEAD_BEEF                       0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
-#define SlaveNO													0x50
+#define SlaveNO				0x50
 
 static ble_nus_t                        m_nus;                                      /**< Structure to identify the Nordic UART Service. */
 
-APP_TIMER_DEF(update_timer);																												//RTCÊ±ÖÓ¿Õ¼äºêÉêÇë 
+APP_TIMER_DEF(update_timer);												//RTCæ—¶é’Ÿç©ºé—´å®ç”³è¯· 
 
 int16_t AccValue[3],GyroValue[3];
 uint8_t id;
 
-float pitch,roll,yaw; 																															//¸©Ñö¡¢ºá¹ö¡¢Æ«º½ 
-short aacx,aacy,aacz;		 																														//¼ÓËÙ¶È 
-short gyrox,gyroy,gyroz;																														//½ÇËÙ¶È 
+float pitch,roll,yaw; 													//ä¿¯ä»°ã€æ¨ªæ»šã€åèˆª 
+short aacx,aacy,aacz;		 											//åŠ é€Ÿåº¦ 
+short gyrox,gyroy,gyroz;												//è§’é€Ÿåº¦ 
 
-void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)						//»Øµ÷º¯Êı£¬´íÎó´¦Àí 
+void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)						//å›è°ƒå‡½æ•°ï¼Œé”™è¯¯å¤„ç† 
 {
     app_error_handler(DEAD_BEEF, line_num, p_file_name);
 }
 
-static void sleep_mode_enter(void)																									//µÍ¹¦ºÄÉî¶ÈË¯ÃßÄ£Ê½ 
+static void sleep_mode_enter(void)										//ä½åŠŸè€—æ·±åº¦ç¡çœ æ¨¡å¼ 
 {
     uint32_t err_code = bsp_indication_set(BSP_INDICATE_IDLE);
     APP_ERROR_CHECK(err_code);
@@ -70,14 +70,14 @@ static void sleep_mode_enter(void)																									//µÍ¹¦ºÄÉî¶ÈË¯ÃßÄ£Ê½
     APP_ERROR_CHECK(err_code);
 }
 
-static void on_adv_evt(ble_adv_evt_t ble_adv_evt)																		//¹ã²¥ÊÂ¼ş´¦Àíº¯Êı 
+static void on_adv_evt(ble_adv_evt_t ble_adv_evt)								//å¹¿æ’­äº‹ä»¶å¤„ç†å‡½æ•° 
 {
     uint32_t err_code;
 
     switch (ble_adv_evt)
     {
         case BLE_ADV_EVT_FAST:
-            err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);								//À¶ÑÀ¹ã²¥±êÊ¶Î» 
+            err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);						//è“ç‰™å¹¿æ’­æ ‡è¯†ä½ 
             APP_ERROR_CHECK(err_code);
             break;
         case BLE_ADV_EVT_IDLE:
@@ -88,7 +88,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)																		//¹ã²¥ÊÂ¼ş´¦À
     }
 }
 
-static void on_ble_evt(ble_evt_t * p_ble_evt)																				//µÍ¹¦ºÄÀ¶ÑÀÊÂ¼ş´¦Àíº¯Êı 
+static void on_ble_evt(ble_evt_t * p_ble_evt)									//ä½åŠŸè€—è“ç‰™äº‹ä»¶å¤„ç†å‡½æ•° 
 {
     uint32_t err_code;
 
@@ -157,7 +157,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)																				//µÍ¹¦ºÄÀ¶ÑÀÊÂ¼
     }
 }
 
-static void ble_evt_dispatch(ble_evt_t * p_ble_evt)																	//À¶ÑÀÊÂ¼ş·Ö·¢º¯Êı 
+static void ble_evt_dispatch(ble_evt_t * p_ble_evt)								//è“ç‰™äº‹ä»¶åˆ†å‘å‡½æ•° 
 {
     ble_nus_on_ble_evt(&m_nus, p_ble_evt);
     on_ble_evt(p_ble_evt);
@@ -166,7 +166,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)																	//À¶ÑÀÊÂ¼ş·Ö
 
 }
 
-static void ble_stack_init(void)																										//Ğ­ÒéÕ»³õÊ¼»¯º¯Êı 
+static void ble_stack_init(void)										//åè®®æ ˆåˆå§‹åŒ–å‡½æ•° 
 {
     uint32_t err_code;
 
@@ -197,7 +197,7 @@ static void ble_stack_init(void)																										//Ğ­ÒéÕ»³õÊ¼»¯º¯Êı
 }
 
 
-void bsp_event_handler(bsp_event_t event)																						//À¶ÑÀBSPÊÂ¼ş´¦Àíº¯Êı 
+void bsp_event_handler(bsp_event_t event)									//è“ç‰™BSPäº‹ä»¶å¤„ç†å‡½æ•°
 {
     switch (event)
     {
@@ -210,40 +210,40 @@ void bsp_event_handler(bsp_event_t event)																						//À¶ÑÀBSPÊÂ¼ş´¦Àí
 }
 
 
-ble_advdata_manuf_data_t manuf_data;																								//³§ÉÌ×Ô¶¨Òå£¬ÔÚº¯ÊıÍâ±£Ö¤È«¾ÖÍ¨ÓÃ
+ble_advdata_manuf_data_t manuf_data;										//å‚å•†è‡ªå®šä¹‰ï¼Œåœ¨å‡½æ•°å¤–ä¿è¯å…¨å±€é€šç”¨
 
 uint8_t mpu_6050_data[14] = {SlaveNO,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 
 
-static void advertising_init(void)																									//¶¨Òå¹ã²¥³õÊ¼»¯º¯Êı 
+static void advertising_init(void)										//å®šä¹‰å¹¿æ’­åˆå§‹åŒ–å‡½æ•° 
 {
     uint32_t               err_code;
     ble_advdata_t          advdata;
     ble_advdata_t          scanrsp;
     ble_adv_modes_config_t options;
 	
-	//×Ô¶¨Òå²ÎÊı
+	//è‡ªå®šä¹‰å‚æ•°
 		int8_t tx_power = 0; 
-		manuf_data.company_identifier  = 0x0059;//0x004C;																//ÉèÖÃ³§ÉÌ±êÊ¶£¬0x0059ÎªNodic 
-		manuf_data.data.p_data = mpu_6050_data;																					//ÉèÖÃ×Ô¶¨Òå¹ã²¥Êı¾İÊı×éÍ·¶ÁÈ¡µØÖ· 
-		manuf_data.data.size = sizeof(mpu_6050_data);																		//ÉèÖÃ×Ô¶¨Òå¹ã²¥Êı¾İ³¤¶È 
+		manuf_data.company_identifier  = 0x0059;//0x004C;						//è®¾ç½®å‚å•†æ ‡è¯†ï¼Œ0x0059ä¸ºNodic 
+		manuf_data.data.p_data = mpu_6050_data;								//è®¾ç½®è‡ªå®šä¹‰å¹¿æ’­æ•°æ®æ•°ç»„å¤´è¯»å–åœ°å€ 
+		manuf_data.data.size = sizeof(mpu_6050_data);							//è®¾ç½®è‡ªå®šä¹‰å¹¿æ’­æ•°æ®é•¿åº¦ 
 
-    memset(&advdata, 0, sizeof(advdata));																						//ÉèÖÃ¹ã²¥²ÎÊı½ÓÈë½á¹¹Ìå 
-    advdata.name_type          = BLE_ADVDATA_NO_NAME;																//ÅäÖÃÀ¶ÑÀ¹ã²¥²»°üº¬À¶ÑÀÃû³Æ 
+    memset(&advdata, 0, sizeof(advdata));									//è®¾ç½®å¹¿æ’­å‚æ•°æ¥å…¥ç»“æ„ä½“ 
+    advdata.name_type          = BLE_ADVDATA_NO_NAME;								//é…ç½®è“ç‰™å¹¿æ’­ä¸åŒ…å«è“ç‰™åç§° 
     advdata.include_appearance = false;
-    advdata.flags              = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;				//ÉèÖÃÀ¶ÑÀ¹ã²¥±êÊ¶£¬Îª³£¹æ²»ÏŞÊ±BLE¹ã²¥ 
-		advdata.p_tx_power_level = &tx_power;																						//ÅäÖÃ¹ã²¥·¢Éä¹¦ÂÊµÈ¼¶£¬³£¹æ²ÎÊıÓĞ0dBm¡¢+4dBm£¬+20dBm 
+    advdata.flags              = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;					//è®¾ç½®è“ç‰™å¹¿æ’­æ ‡è¯†ï¼Œä¸ºå¸¸è§„ä¸é™æ—¶BLEå¹¿æ’­ 
+		advdata.p_tx_power_level = &tx_power;								//é…ç½®å¹¿æ’­å‘å°„åŠŸç‡ç­‰çº§ï¼Œå¸¸è§„å‚æ•°æœ‰0dBmã€+4dBmï¼Œ+20dBm 
 		advdata.p_manuf_specific_data = &manuf_data;
 
 
     memset(&scanrsp, 0, sizeof(scanrsp));
 
     memset(&options, 0, sizeof(options));
-    options.ble_adv_fast_enabled  = true;																						//¿ìËÙ¹ã²¥Ê¹ÄÜ 
-    options.ble_adv_fast_interval = APP_ADV_INTERVAL;																//ÅäÖÃ¹ã²¥¼ä¸ô 
-    options.ble_adv_fast_timeout  = APP_ADV_TIMEOUT_IN_SECONDS;											//ÅäÖÃ¹ã²¥³¬Ê± 
+    options.ble_adv_fast_enabled  = true;									//å¿«é€Ÿå¹¿æ’­ä½¿èƒ½ 
+    options.ble_adv_fast_interval = APP_ADV_INTERVAL;								//é…ç½®å¹¿æ’­é—´éš” 
+    options.ble_adv_fast_timeout  = APP_ADV_TIMEOUT_IN_SECONDS;							//é…ç½®å¹¿æ’­è¶…æ—¶ 
 
-    err_code = ble_advertising_init(&advdata, &scanrsp, &options, on_adv_evt, NULL);//µ×²ã¹ã²¥³õÊ¼»¯ 
+    err_code = ble_advertising_init(&advdata, &scanrsp, &options, on_adv_evt, NULL);				//åº•å±‚å¹¿æ’­åˆå§‹åŒ– 
     APP_ERROR_CHECK(err_code);
 }
 
@@ -253,73 +253,73 @@ static void power_manage(void)
     APP_ERROR_CHECK(err_code);
 }
 
-void advdata_Update(void *p_contex)																									//¹ã²¥Êı¾İ¸üĞÂº¯Êı 
+void advdata_Update(void *p_contex)										//å¹¿æ’­æ•°æ®æ›´æ–°å‡½æ•° 
 {
 		uint8_t i;
 	
-		AccValue[0] = aacx;																															//¼ÓËÙ¶È 
+		AccValue[0] = aacx;										//åŠ é€Ÿåº¦ 
 		AccValue[1] = aacy;
 		AccValue[2] = aacz;
 		
-		GyroValue[0] = (int)(roll*100);																									//Å·À­½Ç¸²¸ÇÔ­½ÇËÙ¶È 
+		GyroValue[0] = (int)(roll*100);									//æ¬§æ‹‰è§’è¦†ç›–åŸè§’é€Ÿåº¦ 
 		GyroValue[1] = (int)(pitch*100);
 		GyroValue[2] = (int)(yaw*10);
 		
-		mpu_6050_data[1] += 1;																													//¹ã²¥°üĞòºÅ±êÊ¶£¬·ÀÖ÷»ú¸´¶Á 
-		for(i=2;i<7;i+=2)																																//¼ÓËÙ¶È¹ã²¥Êı¾İÇøÓòÌî³ä 
+		mpu_6050_data[1] += 1;										//å¹¿æ’­åŒ…åºå·æ ‡è¯†ï¼Œé˜²ä¸»æœºå¤è¯» 
+		for(i=2;i<7;i+=2)										//åŠ é€Ÿåº¦å¹¿æ’­æ•°æ®åŒºåŸŸå¡«å…… 
 		{
-			mpu_6050_data[i]=AccValue[i/2-1]>>8;																					//°´¸ßµÍ×Ö½ÚÌî³äÊı×é 
+			mpu_6050_data[i]=AccValue[i/2-1]>>8;							//æŒ‰é«˜ä½å­—èŠ‚å¡«å……æ•°ç»„ 
 			mpu_6050_data[i+1]=AccValue[i/2-1]&0x00ff;
 		}
-		for(i=8;i<13;i+=2)																															//Å·À­½Ç¹ã²¥Êı¾İÇøÓòÌî³ä 
+		for(i=8;i<13;i+=2)										//æ¬§æ‹‰è§’å¹¿æ’­æ•°æ®åŒºåŸŸå¡«å…… 
 		{
-			mpu_6050_data[i]=GyroValue[i/2-4]>>8;																					//°´¸ßµÍ×Ö½ÚÌî³äÊı×é 
+			mpu_6050_data[i]=GyroValue[i/2-4]>>8;							//æŒ‰é«˜ä½å­—èŠ‚å¡«å……æ•°ç»„ 
 			mpu_6050_data[i+1]=GyroValue[i/2-4]&0x00ff;
 		}
 
-		sd_ble_gap_adv_stop();																													//Í£Ö¹¹ã²¥ 
+		sd_ble_gap_adv_stop();										//åœæ­¢å¹¿æ’­ 
 		
-		advertising_init();																															//ÖØÔØ¹ã²¥Êı¾İ£¬³õÊ¼»¯
+		advertising_init();										//é‡è½½å¹¿æ’­æ•°æ®ï¼Œåˆå§‹åŒ–
 		
-		ble_advertising_start(BLE_ADV_MODE_FAST);																				//¿ªÆô¹ã²¥ 
+		ble_advertising_start(BLE_ADV_MODE_FAST);							//å¼€å¯å¹¿æ’­ 
 }
 
-void Read_Mpu6050()																																	//¶ÁMPU6050´«¸ĞÆ÷£¬DMP¼ÆËãÅ·À­½Ç 
+void Read_Mpu6050()												//è¯»MPU6050ä¼ æ„Ÿå™¨ï¼ŒDMPè®¡ç®—æ¬§æ‹‰è§’ 
 {
-	if(mpu_dmp_get_data(&pitch,&roll,&yaw)==0)																				//¸ù¾İËÙ¶ÈÊı¾İ¼ÆËãÅ·À­½Ç 
+	if(mpu_dmp_get_data(&pitch,&roll,&yaw)==0)								//æ ¹æ®é€Ÿåº¦æ•°æ®è®¡ç®—æ¬§æ‹‰è§’ 
 	{
-		MPU6050_ReadAcc(&aacx,&aacy,&aacz);	    																				//¶ÁÈ¡¼ÓËÙ¶È 
-		MPU6050_ReadGyro(&gyrox,&gyroy,&gyroz);																					//¶ÁÈ¡½Ç¼ÓËÙ¶È 
-		nrf_delay_ms(5);																																//¶ÁÈ¡¼ä¸ô 
+		MPU6050_ReadAcc(&aacx,&aacy,&aacz);	    							//è¯»å–åŠ é€Ÿåº¦ 
+		MPU6050_ReadGyro(&gyrox,&gyroy,&gyroz);								//è¯»å–è§’åŠ é€Ÿåº¦ 
+		nrf_delay_ms(5);										//è¯»å–é—´éš” 
 	}
 }
 
 int main(void)
 {
     // Initialize.
-		APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);						//RTCÊ±ÖÓ³õÊ¼»¯ 
-		app_timer_create(&update_timer,APP_TIMER_MODE_REPEATED,advdata_Update);					//´´½¨¹ã²¥Êı¾İ¸üĞÂº¯Êı 
+		APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);				//RTCæ—¶é’Ÿåˆå§‹åŒ– 
+		app_timer_create(&update_timer,APP_TIMER_MODE_REPEATED,advdata_Update);				//åˆ›å»ºå¹¿æ’­æ•°æ®æ›´æ–°å‡½æ•° 
 
-		ble_stack_init();																																//Ğ­ÒéÕ»³õÊ¼»¯
-		twi_master_init();																															//IICÍ¨ĞÅ¶Ë¿Ú³õÊ¼»¯ 
+		ble_stack_init();										//åè®®æ ˆåˆå§‹åŒ–
+		twi_master_init();										//IICé€šä¿¡ç«¯å£åˆå§‹åŒ– 
 
 		do
 			nrf_delay_ms(1000);
-		while(mpu6050_init(0x68) == false);																							//MPU6050³õÊ¼»¯ 
-		mpu6050_register_read(0x75U, &id, 1);																						
+		while(mpu6050_init(0x68) == false);								//MPU6050åˆå§‹åŒ– 
+		mpu6050_register_read(0x75U, &id, 1);
 		
 		do
 			nrf_delay_ms(1000);
-		while(mpu_dmp_init());																													//DMP³õÊ¼»¯ 
-		Read_Mpu6050();																																	//¶ÁÈ¡Êı¾İ 
+		while(mpu_dmp_init());										//DMPåˆå§‹åŒ– 
+		Read_Mpu6050();											//è¯»å–æ•°æ® 
 		
-		if(mpu_6050_data[0] == 0x54)nrf_delay_ms(5000);																	//
+		if(mpu_6050_data[0] == 0x54)nrf_delay_ms(5000);							//
 		
-		app_timer_start(update_timer, APP_TIMER_TICKS(80,APP_TIMER_PRESCALER), NULL);		//¿ªÆô¶¨Ê±Æ÷ 
+		app_timer_start(update_timer, APP_TIMER_TICKS(80,APP_TIMER_PRESCALER), NULL);			//å¼€å¯å®šæ—¶å™¨ 
 
     for (;;)
     {
-			Read_Mpu6050();																																//¶ÁÈ¡MPU6050Êı¾İ£¬¼ÆËãÅ·À­½Ç 
-			power_manage();																																//µçÔ´¹ÜÀí 
+			Read_Mpu6050();										//è¯»å–MPU6050æ•°æ®ï¼Œè®¡ç®—æ¬§æ‹‰è§’ 
+			power_manage();										//ç”µæºç®¡ç† 
     }
 }
