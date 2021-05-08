@@ -26,19 +26,19 @@
 #define NRF_BLE_MAX_MTU_SIZE    GATT_MTU_SIZE_DEFAULT           /**< MTU size used in the softdevice enabling and to reply to a BLE_GATTS_EVT_EXCHANGE_MTU_REQUEST event. */
 #endif
 
-#define UART_TX_BUF_SIZE        512                             //´®¿Ú·¢ËÍÊı¾İ»º³åÇø£¬±£Ö¤´óÊı¾İÍêÕû´«Êä
-#define UART_RX_BUF_SIZE        512                             //´®¿Ú½ÓÊÕÊı¾İ»º³åÇø
+#define UART_TX_BUF_SIZE        512                             //ä¸²å£å‘é€æ•°æ®ç¼“å†²åŒºï¼Œä¿è¯å¤§æ•°æ®å®Œæ•´ä¼ è¾“
+#define UART_RX_BUF_SIZE        512                             //ä¸²å£æ¥æ”¶æ•°æ®ç¼“å†²åŒº
 
 #define NUS_SERVICE_UUID_TYPE   BLE_UUID_TYPE_VENDOR_BEGIN      /**< UUID type for the Nordic UART Service (vendor specific). */
 
 #define APP_TIMER_PRESCALER     0                               /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_OP_QUEUE_SIZE 3                               /**< Size of timer operation queues. */
 
-#define SCAN_INTERVAL           0x0140                          //É¨Ãè¼ä¸ô
-#define SCAN_WINDOW             0x00E0                          //É¨Ãè´°¿Ú
-#define SCAN_ACTIVE             0                               //²»½ÓÊÕÉ¨ÃèÏìÓ¦
-#define SCAN_SELECTIVE          0                               //É¨Ãè°×Ãûµ¥
-#define SCAN_TIMEOUT            0x0000                          //É¨Ãè³¬Ê±£¬¹Ø±Õ
+#define SCAN_INTERVAL           0x0140                          //æ‰«æé—´éš”
+#define SCAN_WINDOW             0x00E0                          //æ‰«æçª—å£
+#define SCAN_ACTIVE             0                               //ä¸æ¥æ”¶æ‰«æå“åº”
+#define SCAN_SELECTIVE          0                               //æ‰«æç™½åå•
+#define SCAN_TIMEOUT            0x0000                          //æ‰«æè¶…æ—¶ï¼Œå…³é—­
 
 #define MIN_CONNECTION_INTERVAL MSEC_TO_UNITS(20, UNIT_1_25_MS) /**< Determines minimum connection interval in millisecond. */
 #define MAX_CONNECTION_INTERVAL MSEC_TO_UNITS(75, UNIT_1_25_MS) /**< Determines maximum connection interval in millisecond. */
@@ -49,7 +49,7 @@
 #define UUID32_SIZE             4                               /**< Size of 32 bit UUID */
 #define UUID128_SIZE            16                              /**< Size of 128 bit UUID */
 
-APP_TIMER_DEF(send_data);																				//ºê¶¨Òåº¯Êı·½Ê½ÉêÇëÈí¼ş¶¨Ê±Æ÷RTC¿Õ¼ä 
+APP_TIMER_DEF(send_data);					//å®å®šä¹‰å‡½æ•°æ–¹å¼ç”³è¯·è½¯ä»¶å®šæ—¶å™¨RTCç©ºé—´ 
 
 static ble_nus_c_t              m_ble_nus_c;                    /**< Instance of NUS service. Must be passed to all NUS_C API calls. */
 static ble_db_discovery_t       m_ble_db_discovery;             /**< Instance of database discovery module. Must be passed to all db_discovert API calls */
@@ -186,25 +186,25 @@ struct
 
 uint8_t	count;
 uint8_t mpu;
-static void on_ble_evt(ble_evt_t * p_ble_evt)													//BLEÊÂ¼ş´¦Àíº¯Êı
+static void on_ble_evt(ble_evt_t * p_ble_evt)													//BLEäº‹ä»¶å¤„ç†å‡½æ•°
 {
     uint32_t              err_code;
     const ble_gap_evt_t * p_gap_evt = &p_ble_evt->evt.gap_evt;
 
     switch (p_ble_evt->header.evt_id)
     {
-        case BLE_GAP_EVT_ADV_REPORT:																				//¹ã²¥ÊÂ¼ş´¦ÀíÏî
+        case BLE_GAP_EVT_ADV_REPORT:																			//å¹¿æ’­äº‹ä»¶å¤„ç†é¡¹
         {
           const ble_gap_evt_adv_report_t * p_adv_report = &p_gap_evt->params.adv_report;
-					if(p_adv_report->dlen == 24)																			//ÅĞ¶Ï¹ã²¥Êı¾İ³¤¶È£¬Çø·ÖÆäËûÀ¶ÑÀÉè±¸
+					if(p_adv_report->dlen == 24)															//åˆ¤æ–­å¹¿æ’­æ•°æ®é•¿åº¦ï¼ŒåŒºåˆ†å…¶ä»–è“ç‰™è®¾å¤‡
 					{
-						if(p_adv_report->data[10]>=80)																	//ÅĞ¶Ï×Ô¶¨ÒåÊı¾İ¿ªÍ·£¬¶ş´ÎÇø·ÖÉè±¸
+						if(p_adv_report->data[10]>=80)														//åˆ¤æ–­è‡ªå®šä¹‰æ•°æ®å¼€å¤´ï¼ŒäºŒæ¬¡åŒºåˆ†è®¾å¤‡
 						{
-							if(mpu6050_dat[p_adv_report->data[10]&0x0f].flag != p_adv_report->data[11])//Çø·ÖÉè±¸±àºÅ£¬±êÊ¶Éè±¸ĞÅÏ¢
+							if(mpu6050_dat[p_adv_report->data[10]&0x0f].flag != p_adv_report->data[11])//åŒºåˆ†è®¾å¤‡ç¼–å·ï¼Œæ ‡è¯†è®¾å¤‡ä¿¡æ¯
 							{
 								mpu6050_dat[p_adv_report->data[10]&0x0f].flag = p_adv_report->data[11];
 								mpu6050_dat[p_adv_report->data[10]&0x0f].count++;
-								for(count = 12;count < 23;count+=2)													//¶ÁÈ¡×Ô¶¨ÒåÊı¾İ
+								for(count = 12;count < 23;count+=2)											//è¯»å–è‡ªå®šä¹‰æ•°æ®
 								{
 									mpu6050_dat[p_adv_report->data[10]&0x0f].mpu_dat[mpu6050_dat[p_adv_report->data[10]&0x0f].count][count/2-6].Data_L = p_adv_report->data[count]<<8;
 									mpu6050_dat[p_adv_report->data[10]&0x0f].mpu_dat[mpu6050_dat[p_adv_report->data[10]&0x0f].count][count/2-6].Data_L |= p_adv_report->data[count+1];
@@ -285,7 +285,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
     ble_db_discovery_on_ble_evt(&m_ble_db_discovery, p_ble_evt);
     ble_nus_c_on_ble_evt(&m_ble_nus_c,p_ble_evt);
 }
-static void ble_stack_init(void)																				//Ğ­ÒéÕ»³õÊ¼»¯º¯Êı
+static void ble_stack_init(void)											//åè®®æ ˆåˆå§‹åŒ–å‡½æ•°
 {
     uint32_t err_code;
 
@@ -337,7 +337,7 @@ void bsp_event_handler(bsp_event_t event)
             break;
     }
 }
-static void uart_init(void)																							//´®¿Ú³õÊ¼»¯
+static void uart_init(void)												//ä¸²å£åˆå§‹åŒ–
 {
     uint32_t err_code;
 
@@ -372,7 +372,7 @@ static void nus_c_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
-static void db_discovery_init(void)																			//·¢ÏÖ³ÌĞò
+static void db_discovery_init(void)											//å‘ç°ç¨‹åº
 {
     uint32_t err_code = ble_db_discovery_init(db_disc_handler);
     APP_ERROR_CHECK(err_code);
@@ -383,7 +383,7 @@ static void power_manage(void)
     uint32_t err_code = sd_app_evt_wait();
     APP_ERROR_CHECK(err_code);
 }
-void GPIO_init()																												//LEDÖ¸Ê¾µÆ³õÊ¼»¯
+void GPIO_init()													//LEDæŒ‡ç¤ºç¯åˆå§‹åŒ–
 {
 	nrf_gpio_cfg_output(7);
 	nrf_gpio_cfg_output(21);
@@ -398,10 +398,10 @@ void timer_isr(void *p_contex)
 
 	S = true;
 	
-	for(i=0;i<5;i++)																											//¼ì²â´Ó»úÆô¶¯×´Ì¬
+	for(i=0;i<5;i++)												//æ£€æµ‹ä»æœºå¯åŠ¨çŠ¶æ€
 	{
-		if(mpu6050_dat[i].count)D[i] = true;																//´Ó»úÆô¶¯±êÊ¶
-		else {D[i] = false;S = false;}																			//±êÊ¶Î´Æô¶¯£¬¹Ø±Õ±¾´Î´«Êä
+		if(mpu6050_dat[i].count)D[i] = true;									//ä»æœºå¯åŠ¨æ ‡è¯†
+		else {D[i] = false;S = false;}										//æ ‡è¯†æœªå¯åŠ¨ï¼Œå…³é—­æœ¬æ¬¡ä¼ è¾“
 		GPIO_init();
 		switch(i)
 		{
@@ -412,38 +412,38 @@ void timer_isr(void *p_contex)
 			case 4 : if(D[i])nrf_gpio_pin_set(24);else nrf_gpio_pin_clear(24);break;
 		}
 //		NRF_GPIO->OUTSET = 1<<7;
-		mpu6050_dat[i].count=0;																								//¸´Î»¼ÆÊı
+		mpu6050_dat[i].count=0;											//å¤ä½è®¡æ•°
 	}
 	i = 0;
-	if(S)																																		//´«ÊäÆô¶¯
+	if(S)														//ä¼ è¾“å¯åŠ¨
 	{
-		putchar('S');																													//ÆğÊ¼×Ö
+		putchar('S');												//èµ·å§‹å­—
 		for(i=0;i<5;i++)
 		{
 				for(j=1;j<=2;j++)
 				printf("%05d,%05d,%05d,%05d,%05d,%05d,",mpu6050_dat[i].mpu_dat[j][0].Data_L,mpu6050_dat[i].mpu_dat[j][1].Data_L,mpu6050_dat[i].mpu_dat[j][2].Data_L,mpu6050_dat[i].mpu_dat[j][3].Data_L,mpu6050_dat[i].mpu_dat[j][4].Data_L,mpu6050_dat[i].mpu_dat[j][5].Data_L);
 		} 
 
-		putchar('E');																													//½áÊø×Ö
+		putchar('E');												//ç»“æŸå­—
 	}
 }
 
 int main(void)
 {
 	
-    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, NULL);		//Èí¼ş¶¨Ê±Æ÷RTC³õÊ¼»¯º¯Êı 
-		app_timer_create(&send_data,APP_TIMER_MODE_REPEATED,timer_isr);				//´´½¨¶¨Ê±Æ÷£¬ÉèÖÃ¹¤×÷·½Ê½ºÍ»Øµ÷º¯Êı 
+    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, NULL);							//è½¯ä»¶å®šæ—¶å™¨RTCåˆå§‹åŒ–å‡½æ•° 
+		app_timer_create(&send_data,APP_TIMER_MODE_REPEATED,timer_isr);						//åˆ›å»ºå®šæ—¶å™¨ï¼Œè®¾ç½®å·¥ä½œæ–¹å¼å’Œå›è°ƒå‡½æ•° 
 	
-    uart_init();																													//´®¿Ú³õÊ¼»¯ 
-		GPIO_init();																													//Ö¸Ê¾µÆ³õÊ¼»¯£¬½öÔÚĞ­ÒéÕ»³õÊ¼»¯Ç°ÓĞĞ§
+    uart_init();													//ä¸²å£åˆå§‹åŒ– 
+		GPIO_init();												//æŒ‡ç¤ºç¯åˆå§‹åŒ–ï¼Œä»…åœ¨åè®®æ ˆåˆå§‹åŒ–å‰æœ‰æ•ˆ
 
-    db_discovery_init();																									//RSSI
-    ble_stack_init();																											//Ğ­ÒéÕ»³õÊ¼»¯ 
+    db_discovery_init();												//RSSI
+    ble_stack_init();													//åè®®æ ˆåˆå§‹åŒ– 
     nus_c_init();
 
     // Start scanning for peripherals and initiate connection
-		scan_start();																													//³õÊ¼»¯É¨Ãè²¢Æô¶¯ 
-		nrf_delay_ms(150);																										//ÑÓÊ±150ºÁÃë£¬ÓëÉ¨ÃèÊÂ¼ş´í¿ª 
+		scan_start();												//åˆå§‹åŒ–æ‰«æå¹¶å¯åŠ¨ 
+		nrf_delay_ms(150);											//å»¶æ—¶150æ¯«ç§’ï¼Œä¸æ‰«æäº‹ä»¶é”™å¼€ 
 		app_timer_start(send_data, APP_TIMER_TICKS(200,APP_TIMER_PRESCALER), NULL);
 
     for (;;)
